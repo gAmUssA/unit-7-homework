@@ -30,6 +30,13 @@ ModernWeb072714 unit 7 homework
   placeBid() method and remove Restangular HTTP call.
 * Make sure you use URL valid for your environment inside BidService.ts file.
 
+######This app has two parts: JS and Java. The simplest way to deploy:
+* For JS part:
+  1. Run 'grunt build:dist'.
+  2. Manually copy the content from dist dir to the document root of your server.
+* For Java part:
+  1. Create the war file with Gradle and deploy it under WildFly. 
+
 ```java
 task npmInstall(type: Exec) {
   inputs.files "package.json", "bower.json"
