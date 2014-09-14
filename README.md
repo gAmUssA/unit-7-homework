@@ -20,14 +20,14 @@ bidder’s ID is returned to the front end.
 
 ```java
 task npmInstall(type: Exec) {
-inputs.files "package.json", "bower.json"
-outputs.dir "node_modules"
-commandLine 'npm', 'install'
+  inputs.files "package.json", "bower.json"
+  outputs.dir "node_modules"
+  commandLine 'npm', 'install'
 }
 
 task npmBuild(dependsOn: npmInstall, type: Exec) {
-inputs.file "Gruntfile.js"
-outputs.dir "dist"
-commandLine 'npm', 'run', 'build'
+  inputs.file "Gruntfile.js"
+  outputs.dir "dist"
+  commandLine 'npm', 'run', 'build'
 }
 ```
