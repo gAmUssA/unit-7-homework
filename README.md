@@ -1,7 +1,7 @@
 unit-7-homework
 ===============
 
-ModernWeb072714 unit 7 homework
+####ModernWeb072714 unit 7 homework
 
 * Using the provided classes create the Java REST endpoint for receiving user’s bids on a
   product in the auction in Java.
