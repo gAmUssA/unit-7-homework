@@ -1,5 +1,8 @@
 package com.farata.course.mwd.auction.entity;
 
+import com.google.common.base.MoreObjects;
+
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -23,41 +26,36 @@ public class Bid {
     private LocalDateTime bidTime;
     private boolean isWinning;
 
-    public Bid(int id, Product product, BigDecimal amount, int desiredQuantity,
-        User user, LocalDateTime bidTime, boolean isWinning) {
-        this.id = id;
+    public Bid(final Product product, final BigDecimal amount, final int desiredQuantity, final User user) {
+
         this.product = product;
         this.amount = amount;
         this.desiredQuantity = desiredQuantity;
         this.user = user;
-        this.bidTime = bidTime;
-        this.isWinning = isWinning;
+        this.bidTime = LocalDateTime.now();
+        this.isWinning = false;
     }
 
     public Bid(int id, BigDecimal amount) {
+
         this.id = id;
         this.amount = amount;
     }
 
     public Bid(){}
 
-    @Override public String toString() {
-        final StringBuilder sb = new StringBuilder("Bid{");
-        sb.append("id=").append(id);
-        sb.append(", product=").append(product);
-        sb.append(", amount=").append(amount);
-        sb.append(", desiredQuantity=").append(desiredQuantity);
-        sb.append(", user=").append(user);
-        sb.append(", bidTime=").append(bidTime);
-        sb.append(", isWinning=").append(isWinning);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    // TODO: Implement getJSonObjet
     @XmlTransient
     public JsonObject getJsonObject() {
-        return null;
+
+        return Json.createObjectBuilder()
+                .add("id", id)
+                .add("product", product.getId())
+                .add("amount", amount)
+                .add("desiredQuantity", desiredQuantity)
+                .add("user", user.getId())
+                .add("bidTime", bidTime.toString())
+                .add("isWinning", isWinning)
+                .build();
     }
 
     public int getId() {
@@ -114,5 +112,38 @@ public class Bid {
 
     public void setWinning(boolean isWinning) {
         this.isWinning = isWinning;
+    }
+
+    public int getProductId() {
+        return product.getId();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Bid)) return false;
+
+        final Bid bid = (Bid) o;
+
+        return id == bid.id;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("product", product)
+                .add("amount", amount)
+                .add("desiredQuantity", desiredQuantity)
+                .add("user", user)
+                .add("bidTime", bidTime)
+                .add("isWinning", isWinning)
+                .toString();
     }
 }

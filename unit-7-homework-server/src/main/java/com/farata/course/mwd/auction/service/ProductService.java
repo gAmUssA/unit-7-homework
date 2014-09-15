@@ -1,105 +1,69 @@
 package com.farata.course.mwd.auction.service;
 
-import com.farata.course.mwd.auction.data.DataEngine;
 import com.farata.course.mwd.auction.entity.Product;
+import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Path("/product")
-@Produces("application/json")
+@Singleton
 public class ProductService {
 
-    DataEngine dataEngine;
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    @Inject
-    public void setDataEngine(DataEngine dataEngine) {
-        this.dataEngine = dataEngine;
+    @PostConstruct
+    void init() {
+        initProducts();
     }
 
-    @GET
-    public List<Product> getAllProducts() {
-        return dataEngine.findAllProducts();
-    }
+    // key - product id, value - product
+    private Map<Integer, Product> products;
 
-    @GET
-    @Path("/featured")
-    public Response getFeaturedProducts() {
-        final JsonObjectBuilder jsonResult = itemsWithHeading("Featured products");
-        return Response.ok(jsonResult.build()).build();
+    private void initProducts() {
 
-    }
+        products = Maps.newHashMapWithExpectedSize(6);
+        Random random = new Random(LocalDateTime.now().getHour());
 
-    /**
-     * TODO Dumb search implementation. Provide implementation in DataEngine
-     *
-     * @return
-     */
-    @GET
-    @Path("/search")
-    public Response getSearchResults() {
-        final JsonObjectBuilder jsonResult = itemsWithHeading("Search results");
-        return Response.ok(jsonResult.build()).build();
-
-    }
-
-    private JsonObjectBuilder itemsWithHeading(String heading) {
-        JsonArrayBuilder itemsBuilder = Json.createArrayBuilder();
-        dataEngine.findAllFeaturedProducts().forEach(product -> {
-            itemsBuilder.add(product.getJsonObject());
-
-        });
-
-        return Json.createObjectBuilder()
-            .add("heading", heading)
-            .add("items", itemsBuilder);
-    }
-
-    @GET
-    @Path("/{id}/")
-    public Response getProductById(@PathParam("id") int productId, @Context HttpHeaders headers) {
-
-        String userAgent = headers.getRequestHeader("user-agent").get(0);
-        System.out.println("Got request form " + userAgent);
-        Product product = dataEngine.findProductById(productId);
-
-
-        if (product != null) {
-            System.out.println("findProduct method has returned " + product
-                .getTitle());
-            return Response.ok(product.getJsonObject()).build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        for (int i = 1; i <= 6; i++) {
+            Product product = new Product(i, "Item " + i, "images/0" + i + ".jpg",
+                "",
+                "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore adipiscing elit. Ut enim.",
+                2,
+                LocalDateTime.now().plusDays(random.nextInt(10)),
+                new BigDecimal(12),
+                new BigDecimal(35),
+                "123", 5
+            );
+            products.put(i, product);
         }
     }
 
-    @GET
-    @Path("/{id}/jaxb")
-    public Product getProductByIdWithBinding(@PathParam("id") int productId,
-        @Context HttpHeaders headers) {
+    public List<Product> findAllProducts() {
 
-        String userAgent = headers.getRequestHeader("user-agent").get(0);
-        System.out.println("Got request form " + userAgent);
-        Product product = dataEngine.findProductById(productId);
-
-
-        if (product != null) {
-            System.out.println("findProduct method has returned " + product
-                .getTitle());
-            return product;
-        } else {
-            return null;
-        }
+        return Collections.unmodifiableList((List<Product>) products.values());
     }
 
+    public List<Product> findProductsByFeatured(boolean featured) {
+
+        List<Product> productsByFeatured = products.values().stream()
+                .filter(product -> product.isFeatured() == featured)
+                .collect(Collectors.toList());
+        logger.info("Found [{}] products for featured[{}]", productsByFeatured.size(), featured);
+
+        return productsByFeatured;
+    }
+
+    public Product findProductById(int id) {
+
+        Product product = products.get(id);
+        logger.info("Found for id[{}] product[{}]", id, product);
+
+        return product;
+    }
 }

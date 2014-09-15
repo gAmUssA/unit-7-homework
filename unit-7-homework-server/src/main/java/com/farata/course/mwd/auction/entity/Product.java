@@ -1,5 +1,7 @@
 package com.farata.course.mwd.auction.entity;
 
+import com.google.common.base.MoreObjects;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.xml.bind.annotation.*;
@@ -22,7 +24,9 @@ public class Product {
     private BigDecimal reservedPrice;   // If a bidder offers reserved price, the auction is closed
     private String timeleft;
     private int watchers;
+    private boolean featured;
 
+    public Product() {}
 
     public Product(Integer id, String title, String thumbnail, String url, String description,
         int quantity,
@@ -39,23 +43,6 @@ public class Product {
         this.reservedPrice = reservedPrice;
         this.timeleft = timeleft;
         this.watchers = watchers;
-    }
-
-    @Override public String toString() {
-        final StringBuilder sb = new StringBuilder("Product{");
-        sb.append("id=").append(id);
-        sb.append(", title='").append(title).append('\'');
-        sb.append(", thumbnail='").append(thumbnail).append('\'');
-        sb.append(", url='").append(url).append('\'');
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", quantity=").append(quantity);
-        sb.append(", auctionEndTime=").append(auctionEndTime);
-        sb.append(", minimalPrice=").append(minimalPrice);
-        sb.append(", reservedPrice=").append(reservedPrice);
-        sb.append(", timeleft='").append(timeleft).append('\'');
-        sb.append(", watchers=").append(watchers);
-        sb.append('}');
-        return sb.toString();
     }
 
     public String getTitle() {
@@ -98,8 +85,6 @@ public class Product {
         this.timeleft = timeleft;
     }
 
-
-
     public Integer getId() {
         return id;
     }
@@ -108,20 +93,105 @@ public class Product {
         this.id = id;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(final int quantity) {
+        this.quantity = quantity;
+    }
+
+    public LocalDateTime getAuctionEndTime() {
+        return auctionEndTime;
+    }
+
+    public void setAuctionEndTime(final LocalDateTime auctionEndTime) {
+        this.auctionEndTime = auctionEndTime;
+    }
+
+    public BigDecimal getMinimalPrice() {
+        return minimalPrice;
+    }
+
+    public void setMinimalPrice(final BigDecimal minimalPrice) {
+        this.minimalPrice = minimalPrice;
+    }
+
+    public BigDecimal getReservedPrice() {
+        return reservedPrice;
+    }
+
+    public void setReservedPrice(final BigDecimal reservedPrice) {
+        this.reservedPrice = reservedPrice;
+    }
+
+    public int getWatchers() {
+        return watchers;
+    }
+
+    public void setWatchers(final int watchers) {
+        this.watchers = watchers;
+    }
+
+    public boolean isFeatured() {
+        return featured;
+    }
+
+    public void setFeatured(final boolean featured) {
+        this.featured = featured;
+    }
+
     @XmlTransient
     public JsonObject getJsonObject() {
+
         return Json.createObjectBuilder()
-            .add("id", id)
-            .add("title", title)
-            .add("thumbnail", thumbnail)
-            .add("url", url)
-            .add("description", description)
-            .add("quantity", quantity)
-            .add("auctionEndTime", String.valueOf(auctionEndTime))
-            .add("minimalPrice", minimalPrice)
-            .add("reservedPrice", reservedPrice)
-            .add("timeleft", timeleft)
-            .add("watchers", watchers)
-            .build();
+                .add("id", id)
+                .add("title", title)
+                .add("thumbnail", thumbnail)
+                .add("url", url)
+                .add("description", description)
+                .add("quantity", quantity)
+                .add("auctionEndTime", String.valueOf(auctionEndTime))
+                .add("minimalPrice", minimalPrice)
+                .add("reservedPrice", reservedPrice)
+                .add("timeleft", timeleft)
+                .add("watchers", watchers)
+                .add("featured", featured)
+                .build();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+
+        if (this == o) return true;
+        if (!(o instanceof Product)) return false;
+
+        final Product product = (Product) o;
+
+        return id.equals(product.id);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("title", title)
+                .add("description", description)
+                .add("featured", featured)
+                .add("quantity", quantity)
+                .add("thumbnail", thumbnail)
+                .add("url", url)
+                .add("auctionEndTime", auctionEndTime)
+                .add("minimalPrice", minimalPrice)
+                .add("reservedPrice", reservedPrice)
+                .add("timeleft", timeleft)
+                .add("watchers", watchers)
+                .toString();
     }
 }
