@@ -25,9 +25,12 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile 'org.jboss.arquillian.junit:arquillian-junit-container:1.1.1.Final'
     testCompile 'org.wildfly:wildfly-arquillian-container-embedded:8.0.0.Final'
+    testCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-bom:2.2.0-alpha-2'
+    testCompile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.2.0-alpha-2'
+
 }
 
 tasks.withType(Test) {
-    systemProperty 'JBOSS_HOME', 'C:\\Program Files\\wildfly-8.1.0.Final'
+    systemProperty 'JBOSS_HOME', '/Users/apple/projects/wildfly-8.1.0.Final'
     systemProperty 'java.util.logging.manager', 'org.jboss.logmanager.LogManager'
 }
