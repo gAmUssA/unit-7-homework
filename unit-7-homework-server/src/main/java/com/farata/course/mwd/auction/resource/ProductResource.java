@@ -19,6 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
+import static javax.ws.rs.core.Response.Status.*;
+
 @Path("/product")
 @Produces(MediaType.APPLICATION_JSON)
 public class ProductResource {
@@ -41,8 +43,10 @@ public class ProductResource {
     @Path("/featured")
     public Response getFeaturedProducts() {
 
+        logger.info("Received request for featured products...");
         List<Product> products = productService.findProductsByFeatured(true);
         final JsonObjectBuilder jsonResult = itemsWithHeading("Featured products", products);
+
         return Response.ok(jsonResult.build()).build();
     }
 
@@ -50,8 +54,10 @@ public class ProductResource {
     @Path("/search")
     public Response getSearchResults() {
 
+        logger.info("Received request for search results...");
         List<Product> products = productService.findProductsByFeatured(false);
         final JsonObjectBuilder jsonResult = itemsWithHeading("Search results", products);
+
         return Response.ok(jsonResult.build()).build();
     }
 
@@ -70,14 +76,14 @@ public class ProductResource {
     public Response getProductById(@PathParam("id") int productId, @Context HttpHeaders headers) {
 
         String userAgent = headers.getRequestHeader("user-agent").get(0);
-        logger.info("product id[{}], request from[{}]", productId, userAgent);
+        logger.info("Received request for product id[{}] from[{}]", productId, userAgent);
 
         Product product = productService.findProductById(productId);
 
         if (product != null) {
             return Response.ok(product.getJsonObject()).build();
         } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(NOT_FOUND).build();
         }
     }
 

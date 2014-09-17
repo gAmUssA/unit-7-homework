@@ -2,20 +2,35 @@ package com.farata.course.mwd.auction.entity;
 
 import com.google.common.base.MoreObjects;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.xml.bind.annotation.XmlTransient;
+
 public class User {
+
     private int id;
     private String name;
     private String email;
     private boolean hasOverbidNotifications;
 
     public User(int id, String name, String email, boolean hasOverbidNotifications) {
+
         this.id = id;
         this.name = name;
         this.email = email;
         this.hasOverbidNotifications = hasOverbidNotifications;
     }
 
-    // TODO implement to getJsonObject method
+    @XmlTransient
+    public JsonObject getJsonObject() {
+
+        return Json.createObjectBuilder()
+                .add("id", id)
+                .add("name", name)
+                .add("email", email)
+                .add("hasOverbidNotifications", hasOverbidNotifications)
+                .build();
+    }
 
     public int getId() {
         return id;
@@ -57,9 +72,8 @@ public class User {
 
         final User user = (User) o;
 
-        if (id != user.id) return false;
+        return id == user.id;
 
-        return true;
     }
 
     @Override

@@ -18,8 +18,8 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
     </content>
@@ -37,16 +37,13 @@
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-core-impl-base-1.1.1.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-test-impl-base-1.1.1.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-container-impl-base-1.1.1.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-impl-base-1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: cdi-api-1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: wildfly-arquillian-common-8.0.0.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: wildfly-embedded-8.0.0.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: jboss-logging-3.1.4.GA" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-core-api-1.1.2.Final-wildfly-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: wildfly-build-config-8.0.0.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-api-1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-descriptors-spi-2.0.0-alpha-3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-spi-1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: javax.inject-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-testenricher-cdi-1.1.2.Final-wildfly-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-testenricher-ejb-1.1.2.Final-wildfly-1" level="project" />
@@ -109,6 +106,9 @@
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-core-spi-1.1.2.Final-wildfly-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-config-api-1.1.2.Final-wildfly-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: arquillian-config-impl-base-1.1.2.Final-wildfly-1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-impl-base-1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-api-1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: shrinkwrap-spi-1.1.2" level="project" />
     <orderEntry type="library" exported="" name="Gradle: guava-18.0" level="project" />
     <orderEntry type="library" exported="" name="Gradle: logback-classic-1.1.2" level="project" />
     <orderEntry type="library" exported="" name="Gradle: logback-core-1.1.2" level="project" />

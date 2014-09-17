@@ -1,5 +1,6 @@
 package com.farata.course.mwd.auction.service;
 
+import com.farata.course.mwd.auction.entity.Bid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ public class QueueService {
     @Resource(lookup = "queue/test")
     Queue testQueue;
 
-    public void sendBidToQueue() {
+    public void sendBidToQueue(Bid bid) {
 
         try (JMSContext context = connectionFactory.createContext(DEFAULT_USERNAME, DEFAULT_PASSWORD)) {
 

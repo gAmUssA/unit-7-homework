@@ -1,7 +1,7 @@
 package com.farata.course.mwd.auction.service;
 
 import com.farata.course.mwd.auction.entity.Product;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +22,11 @@ public class ProductService {
         initProducts();
     }
 
-    // key - product id, value - product
-    private Map<Integer, Product> products;
+    private List<Product> products;
 
     private void initProducts() {
 
-        products = Maps.newHashMapWithExpectedSize(6);
+        products = Lists.newArrayListWithExpectedSize(6);
         Random random = new Random(LocalDateTime.now().getHour());
 
         for (int i = 1; i <= 6; i++) {
@@ -40,18 +39,18 @@ public class ProductService {
                 new BigDecimal(35),
                 "123", 5
             );
-            products.put(i, product);
+            products.add(product);
         }
     }
 
     public List<Product> findAllProducts() {
 
-        return Collections.unmodifiableList((List<Product>) products.values());
+        return Collections.unmodifiableList(products);
     }
 
     public List<Product> findProductsByFeatured(boolean featured) {
 
-        List<Product> productsByFeatured = products.values().stream()
+        List<Product> productsByFeatured = products.stream()
                 .filter(product -> product.isFeatured() == featured)
                 .collect(Collectors.toList());
         logger.info("Found [{}] products for featured[{}]", productsByFeatured.size(), featured);
@@ -61,7 +60,10 @@ public class ProductService {
 
     public Product findProductById(int id) {
 
-        Product product = products.get(id);
+        List<Product> filteredProducts = products.stream()
+                .filter(product -> product.getId() == id)
+                .collect(Collectors.toList());
+        Product product = (filteredProducts.size() == 1) ? filteredProducts.get(0) : null;
         logger.info("Found for id[{}] product[{}]", id, product);
 
         return product;

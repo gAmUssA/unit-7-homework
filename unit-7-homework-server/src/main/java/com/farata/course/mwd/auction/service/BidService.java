@@ -4,17 +4,14 @@ import com.farata.course.mwd.auction.entity.Bid;
 import com.farata.course.mwd.auction.entity.Product;
 import com.farata.course.mwd.auction.entity.User;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,42 +23,100 @@ public class BidService {
 
     private static final Logger logger = LoggerFactory.getLogger(BidService.class);
 
-    private Map<Integer, Product> products;
-    private Map<Integer, User> users;
-    private Map<Integer, List<Bid>> productBids;
-    private Map<Integer, Set<User>> productBidders;
+    private List<Bid> bids = Lists.newArrayList();
+    private ProductService productService;
+    private UserService userService;
+    private QueueService queueService;
 
-    public BidService() {
-
-        products = createProducts();
-        users = createUsers();
-        productBids = Maps.newHashMap();
-        productBidders = Maps.newHashMap();
+    @Inject
+    public void setProductService(final ProductService productService) {
+        this.productService = productService;
     }
 
-    public boolean bidOnProduct(int productId, BigDecimal bidAmount, int quantity, int userId) {
+    @Inject
+    public void setUserService(final UserService userService) {
+        this.userService = userService;
+    }
 
-        Bid newBid = createBid(getProduct(productId), bidAmount, quantity, getUser(userId));
+    @Inject
+    public void setQueueService(final QueueService queueService) {
+        this.queueService = queueService;
+    }
+
+    public void setBids(List<Bid> bids) {
+        this.bids = Lists.newArrayList(bids);
+    }
+    public Bid bidOnProduct(int productId, BigDecimal bidAmount, int quantity, int userId) {
+
+        Bid newBid = createBid(productId, bidAmount, quantity, userId);
         newBid.setWinning(false);
 
         if (bidAmountLessThanMinimalPrice(newBid)) {
             sendSorryEmail(newBid);
-        } else {
-            Bid bidWithHighestAmount = findBidWithHighestAmount(productId);
+            return null;
+        }
+        Bid bidWithHighestAmount = findBidWithHighestAmount(productId);
 
-            if (bidAmountMoreThanHighestBidAmount(newBid, bidWithHighestAmount)) {
-                Set<User> otherBidders = findOtherBidders(newBid);
-                sendOverBidEmail(newBid, otherBidders);
-            }
-
-            if (bidAmountEqualToOrGreaterThanReservedPrice(newBid)) {
-                newBid.setWinning(true);
-                sendWinningEmail(newBid);
-            }
-            addBidToQueue(newBid);
+        if (bidAmountMoreThanHighestBidAmount(newBid, bidWithHighestAmount)) {
+            sendOverBidEmail(newBid);
         }
 
-        return newBid.isWinning();
+        if (bidAmountEqualToOrGreaterThanReservedPrice(newBid)) {
+            newBid.setWinning(true);
+            sendWinningEmail(newBid);
+        }
+        bids.add(newBid);
+        queueService.sendBidToQueue(newBid);
+
+        return newBid;
+    }
+
+    public Set<User> findOtherBidders(final Bid bid) {
+
+        Set<User> bidders = findCurrentBidders(bid.getProductId());
+        return bidders.stream()
+                .filter(bidder -> !bidder.equals(bid.getUser()))
+                .collect(Collectors.toSet());
+    }
+
+    public Bid findBidWithHighestAmount(int productId) {
+
+        List<Bid> currentBids = findCurrentBids(productId);
+        if (currentBids.isEmpty()) {
+            return null;
+        }
+        Comparator<Bid> byBidAmountAsc = (o1, o2) -> o1.getAmount().compareTo(o2.getAmount());
+
+        return currentBids.stream().max(byBidAmountAsc).get();
+    }
+
+    public List<Bid> findCurrentBids(int productId) {
+
+        return bids.stream()
+                .filter(bid -> bid.getProductId() == productId)
+                .collect(Collectors.toList());
+    }
+
+    public Set<User> findCurrentBidders(int productId) {
+
+        return findCurrentBids(productId).stream()
+                .map(Bid::getUser)
+                .collect(Collectors.toSet());
+    }
+
+    public int getBidsCount() {
+        return bids.size();
+    }
+
+    public Bid findBidById(final int id) {
+
+        List<Bid> filteredBids = bids.stream()
+                .filter(bid -> bid.getId() == id)
+                .collect(Collectors.toList());
+        Bid bid = (filteredBids.size() == 1) ? filteredBids.get(0) : null;
+        logger.info("Found for id[{}] bid[{}]", id, bid);
+
+        return bid;
     }
 
     private boolean bidAmountLessThanMinimalPrice(final Bid newBid) {
@@ -74,153 +129,50 @@ public class BidService {
         return (bidWithHighestAmount != null) && newBid.getAmount().compareTo(bidWithHighestAmount.getAmount()) == 1;
     }
 
-    private boolean bidAmountEqualToOrGreaterThanReservedPrice(final Bid newBid) {
+    private boolean bidAmountEqualToOrGreaterThanReservedPrice(final Bid bid) {
 
-        Product product = newBid.getProduct();
-        return product.getReservedPrice().compareTo(newBid.getAmount()) == -1
-                || product.getReservedPrice().compareTo(newBid.getAmount()) == 0;
+        Product product = bid.getProduct();
+        return product.getReservedPrice().compareTo(bid.getAmount()) == -1
+                || product.getReservedPrice().compareTo(bid.getAmount()) == 0;
     }
 
-    private void sendSorryEmail(final Bid newBid) {
+    private void sendSorryEmail(final Bid bid) {
 
-        Product product = newBid.getProduct();
+        Product product = bid.getProduct();
         logger.info("Sending SORRY email to [{}]: new bid[${}] is less than minimal price[${}] for  product[{}]",
-                newBid.getUser().toShortString(), newBid.getAmount(), product.getMinimalPrice(), product.getTitle());
+                bid.getUser().toShortString(), bid.getAmount(), product.getMinimalPrice(), product.getTitle());
     }
 
-    private void sendOverBidEmail(final Bid newBid, final Set<User> otherBidders) {
+    private void sendOverBidEmail(final Bid bid) {
 
-        otherBidders.forEach(bidder -> logger.info("Sending OVERBID email to [{}]: new bid[${}] was received for product[{}]",
-                bidder.toShortString(), newBid.getAmount(), newBid.getProduct().getTitle()));
+        findCurrentBidders(bid.getProductId()).stream()
+                .filter(bidder -> bidder.getId() != bid.getUserId() && bidder.isHasOverbidNotifications())
+                .forEach(bidder -> logger.info("Sending OVERBID email to [{}]: new bid[${}] was received for product[{}]",
+                        bidder.toShortString(), bid.getAmount(), bid.getProduct().getTitle()));
     }
 
-    private void sendWinningEmail(final Bid newBid) {
+    private void sendWinningEmail(final Bid bid) {
 
-        Product product = newBid.getProduct();
+        Product product = bid.getProduct();
         logger.info("Sending WINNING email to [{}]: new bid[${}] is equal to or greater than" +
-                        " reserved price[${}] for  product[{}]", newBid.getUser().toShortString(),
-                newBid.getAmount(), product.getReservedPrice(), product.getTitle());
+                        " reserved price[${}] for  product[{}]", bid.getUser().toShortString(),
+                bid.getAmount(), product.getReservedPrice(), product.getTitle());
     }
 
-    private Set<User> findOtherBidders(final Bid newBid) {
+    private Product findProduct(int productId) {
 
-        Set<User> bidders = getCurrentBidders(newBid.getProductId());
-        return bidders.stream()
-                .filter(bidder -> !bidder.equals(newBid.getUser()) && bidder.isHasOverbidNotifications())
-                .collect(Collectors.toSet());
+        return productService.findProductById(productId);
     }
 
-    public Bid findBidWithHighestAmount(int productId) {
+    private User findUser(int userId) {
 
-        List<Bid> currentBids = getCurrentBids(productId);
-        if (currentBids.isEmpty()) {
-            return null;
-        }
-
-//        Java 7
-//        Comparator<Bid> byBidAmount = new Comparator<Bid>() {
-//            @Override
-//            public int compare(final Bid o1, final Bid o2) {
-//                return o1.getAmount().compareTo(o2.getAmount());
-//            }
-//        };
-
-//        Comparator<Bid> byBidAmountDesc = (o1, o2) -> o2.getAmount().compareTo(o1.getAmount());
-//        List<Bid> sortedCurrentBids = currentBids.stream().sorted(byBidAmountDesc).collect(Collectors.toList());
-//        return sortedCurrentBids.get(0);
-        Comparator<Bid> byBidAmountAsc = (o1, o2) -> o1.getAmount().compareTo(o2.getAmount());
-        return currentBids.stream().max(byBidAmountAsc).get();
+        return userService.findUserById(userId);
     }
 
-    public Product getProduct(int productId) {
-        return products.get(productId);
-    }
+    private Bid createBid(int productId, BigDecimal bidAmount, int quantity, int userId) {
 
-    public User getUser(int userId) {
-        return users.get(userId);
-    }
-
-    public int getAllBidsCount() {
-        return productBids.isEmpty() ? 0 : (int) productBids.values().stream().count();
-    }
-
-    public List<Bid> getCurrentBids(int productId) {
-        return productBids.get(productId) == null ? Lists.newArrayList() : productBids.get(productId);
-    }
-
-    public Set<User> getCurrentBidders(int productId) {
-        return productBidders.get(productId) == null ? Sets.newHashSet() : productBidders.get(productId);
-    }
-
-    public Bid createBid(int productId, BigDecimal bidAmount, int quantity, int userId) {
-
-        return createBid(getProduct(productId), bidAmount, quantity, getUser(userId));
-    }
-
-    public void addBidToQueue(Bid bid) {
-
-        List<Bid> currentBids = getCurrentBids(bid.getProductId());
-        currentBids.add(bid);
-        productBids.put(bid.getProductId(), currentBids);
-
-        Set<User> currentBidders = getCurrentBidders(bid.getProductId());
-        currentBidders.add(bid.getUser());
-        productBidders.put(bid.getProductId(), currentBidders);
-    }
-
-    private Map<Integer, Product> createProducts() {
-
-        Map<Integer, Product> products = Maps.newHashMapWithExpectedSize(2);
-
-        Product product = new Product();
-        product.setId(1);
-        product.setTitle("Item 1");
-        //product.setThumb("01.jpg");
-        product.setDescription("Item 1: Lorem ipsum dolor sit amet, consectetur adipisicing elit.");
-        product.setQuantity(15);
-        product.setAuctionEndTime(LocalDateTime.now().plusSeconds(10));
-        product.setWatchers(5);
-        product.setMinimalPrice(new BigDecimal("40.0"));
-        product.setReservedPrice(new BigDecimal("200.0"));
-
-        products.put(product.getId(), product);
-
-        Product product2 = new Product();
-        product2.setId(2);
-        product2.setTitle("Item 2");
-        //product2.setThumb("02.jpg");
-        product2.setDescription("Item 2: Lorem ipsum dolor sit amet, consectetur adipisicing elit.");
-        product2.setQuantity(5);
-        product2.setAuctionEndTime(LocalDateTime.now().plusSeconds(10));
-        product2.setWatchers(3);
-        product2.setMinimalPrice(new BigDecimal("20.0"));
-        product2.setReservedPrice(new BigDecimal("100.0"));
-
-        products.put(product2.getId(), product2);
-
-        return products;
-    }
-
-    private Map<Integer, User> createUsers() {
-
-        Map<Integer, User> users = Maps.newHashMap();
-
-        User user = new User(1, "philip.fry", "philip.fry@planet-express.com", true);
-        users.put(user.getId(), user);
-
-        User user2 = new User(2, "bender.rodriguez", "bender.rodriguez@planet-express.com", true);
-        users.put(user2.getId(), user2);
-
-        User user3 = new User(3, "amy.wong", "amy.wong@planet-express.com", true);
-        users.put(user3.getId(), user3);
-
-        return users;
-    }
-
-    private Bid createBid(Product product, BigDecimal bidAmount, int quantity, User user) {
-
-        Bid bid = new Bid(product, bidAmount, quantity, user);
-        bid.setId(getAllBidsCount() + 1);
+        Bid bid = new Bid(findProduct(productId), bidAmount, quantity, findUser(userId));
+        bid.setId(bids.size() + 1);
 
         return bid;
     }

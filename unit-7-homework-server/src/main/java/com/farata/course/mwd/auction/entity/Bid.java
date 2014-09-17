@@ -36,23 +36,17 @@ public class Bid {
         this.isWinning = false;
     }
 
-    public Bid(int id, BigDecimal amount) {
-
-        this.id = id;
-        this.amount = amount;
-    }
-
-    public Bid(){}
+    public Bid() {}
 
     @XmlTransient
     public JsonObject getJsonObject() {
 
         return Json.createObjectBuilder()
                 .add("id", id)
-                .add("product", product.getId())
+                .add("product", getProductId())// product.getJsonObject())
                 .add("amount", amount)
                 .add("desiredQuantity", desiredQuantity)
-                .add("user", user.getId())
+                .add("user", getUserId())//user.getJsonObject())
                 .add("bidTime", bidTime.toString())
                 .add("isWinning", isWinning)
                 .build();
@@ -118,15 +112,19 @@ public class Bid {
         return product.getId();
     }
 
+    public int getUserId() {
+        return user.getId();
+    }
+
     @Override
     public boolean equals(final Object o) {
+
         if (this == o) return true;
         if (!(o instanceof Bid)) return false;
 
         final Bid bid = (Bid) o;
 
         return id == bid.id;
-
     }
 
     @Override
@@ -136,6 +134,7 @@ public class Bid {
 
     @Override
     public String toString() {
+
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("product", product)
@@ -146,4 +145,5 @@ public class Bid {
                 .add("isWinning", isWinning)
                 .toString();
     }
+
 }
